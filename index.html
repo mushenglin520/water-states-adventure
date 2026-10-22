@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>《小水滴的三態變身大冒險》3D 科學闖關遊戲</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="./assets/index-FpssP9li.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Beky7jM9.css">
+  </head>
+  <body>
+    <div id="game-root">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- 主選單 / 標題畫面 -->
+      <div id="title-modal" class="modal-overlay active">
+        <div class="title-card">
+          <div class="title-banner-wrap">
+            <img src="./assets/banner.png" alt="小水滴的三態變身大冒險" class="title-banner" />
+          </div>
+          <div class="title-content">
+            <div class="badge-row">
+              <span class="edu-badge">國小三、四年級自然科學</span>
+              <span class="edu-badge highlight">3D 實境解謎闖關</span>
+              <span class="edu-badge">水的固態・液態・氣態</span>
+            </div>
+            <h1>💧 小水滴的三態變身大冒險</h1>
+            <p class="subtitle">跟著主角「滴滴」一起運用冷卻、加熱、凝固、融化、蒸發與凝結，解開三大自然環境關卡！</p>
+
+            <div class="level-select-grid">
+              <button class="level-select-btn" data-level="0">
+                <div class="lvl-num">第一關｜MVP 核心關</div>
+                <div class="lvl-name">❄️ 冰雪王國・凝固與融化</div>
+                <div class="lvl-desc">冷卻變成堅固小冰塊壓下重量開關，再受熱融化穿過窄縫水道！</div>
+              </button>
+              <button class="level-select-btn" data-level="1">
+                <div class="lvl-num">第二關｜山林與水道</div>
+                <div class="lvl-name">🌊 水滴迷宮・流動與形狀</div>
+                <div class="lvl-desc">水沒有固定形狀、可以流動！切換水閘門並穿過彎曲透明管線。</div>
+              </button>
+              <button class="level-select-btn" data-level="2">
+                <div class="lvl-num">第三關｜水循環冒險</div>
+                <div class="lvl-name">☁️ 天空之城・蒸發與凝結</div>
+                <div class="lvl-desc">受熱蒸發成輕盈水蒸氣乘氣流飛上雲端，遇冷凝結成小水滴降落！</div>
+              </button>
+            </div>
+
+            <div class="controls-preview">
+              <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或 <kbd>方向鍵</kbd> 移動</span>
+              <span><kbd>Space</kbd> 跳躍</span>
+              <span><kbd>E</kbd> 啟動環境裝置</span>
+              <span><kbd>M</kbd> 三態粒子觀察鏡</span>
+              <span><kbd>H</kbd> 科學小精靈提示</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 頂部 HUD -->
+      <header id="hud-top" class="hud-bar">
+        <div class="hud-left">
+          <div class="level-pill" id="hud-level-title">第一關｜冰雪王國</div>
+          <div class="mission-box" id="hud-mission-text">任務：跟著地面箭頭前進，想辦法打開上鎖的冰晶出口大門！</div>
+        </div>
+
+        <div class="hud-center">
+          <div class="state-card" id="hud-state-card">
+            <div class="state-icon" id="hud-state-icon">💧</div>
+            <div class="state-info">
+              <div class="state-label">目前狀態：<strong id="hud-state-name">液態（小水滴）</strong></div>
+              <div class="state-note" id="hud-state-sci">水可以流動，沒有固定形狀</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="star-counter" title="探索星星（不扣分！）">
+            <span class="star-icon">⭐</span>
+            <span id="hud-stars">0 / 3</span>
+          </div>
+          <button id="btn-microscope" class="hud-btn" title="三態粒子觀察鏡 (M)">
+            🔬 觀察鏡 <kbd>M</kbd>
+          </button>
+          <button id="btn-hint" class="hud-btn" title="科學小精靈提示 (H)">
+            🧚 提示 <kbd>H</kbd>
+          </button>
+          <button id="btn-quality" class="hud-btn" title="切換畫質/教室電腦流暢模式">
+            ⚡ 高畫質
+          </button>
+          <button id="btn-sound" class="hud-btn" title="音效開關">
+            🔊 音效
+          </button>
+          <button id="btn-pause" class="hud-btn" title="暫停與選單 (Esc)">
+            ⏸️ 選單 <kbd>Esc</kbd>
+          </button>
+        </div>
+      </header>
+
+      <!-- 底部 HUD：溫度條與互動提示 -->
+      <footer id="hud-bottom">
+        <!-- 互動按鍵浮動提示 -->
+        <div id="interact-prompt" class="interact-prompt hidden">
+          <span class="key-badge">E</span>
+          <span id="interact-text">按 E 操作冷卻機</span>
+        </div>
+
+        <!-- 科學小精靈對話泡泡 -->
+        <div id="fairy-dialogue" class="fairy-dialogue">
+          <div class="fairy-avatar">🧚‍♀️</div>
+          <div class="fairy-content">
+            <div class="fairy-title">
+              <span>科學小精靈・芽芽</span>
+              <span class="sci-tag" id="fairy-tag">觀察與思考</span>
+            </div>
+            <p id="fairy-text">歡迎來到冰雪王國！試著用方向鍵或 WASD 移動「滴滴」，空白鍵跳躍吧！</p>
+          </div>
+          <button id="fairy-close" class="fairy-close" title="關閉提示">✕</button>
+        </div>
+
+        <!-- 溫度計狀態列 -->
+        <div class="thermometer-panel">
+          <div class="thermo-header">
+            <span class="thermo-title">🌡️ 環境與水滴溫度計 <small>（遊戲簡化刻度）</small></span>
+            <span class="thermo-value" id="hud-temp-val">20°C（常溫液態）</span>
+          </div>
+          <div class="thermo-bar-track">
+            <div class="thermo-zone cold">❄️ 冷卻凝固 (&le;0°C)</div>
+            <div class="thermo-zone normal">💧 液態水 (0~100°C)</div>
+            <div class="thermo-zone hot">☀️ 受熱蒸發加速</div>
+            <div class="thermo-fill" id="hud-temp-fill" style="width: 45%;"></div>
+            <div class="thermo-marker" id="hud-temp-marker" style="left: 45%;"></div>
+          </div>
+        </div>
+      </footer>
+
+      <!-- 相變動畫橫幅提示 -->
+      <div id="phase-banner" class="phase-banner hidden">
+        <div class="phase-banner-inner">
+          <div class="phase-title" id="phase-banner-title">❄️ 遇冷凝固！液態水 ➔ 固態冰塊</div>
+          <div class="phase-desc" id="phase-banner-desc">水冷卻到約 0°C 以下時，會凝固成有固定形狀的冰塊！（屬於物理變化，滴滴還是水喔！）</div>
+          <button id="phase-skip-btn" class="phase-skip-btn">跳過動畫（保留重點）</button>
+        </div>
+      </div>
+
+      <!-- 三態粒子觀察鏡 Modal -->
+      <div id="microscope-modal" class="modal-overlay">
+        <div class="modal-card microscope-card">
+          <div class="modal-header">
+            <h2>🔬 三態特徵與粒子示意觀察鏡</h2>
+            <button id="microscope-close" class="close-btn">✕</button>
+          </div>
+          <p class="microscope-note">
+            ⚠️ <strong>科學提醒</strong>：下方圓點是幫助理解的「粒子運動示意圖」，不是真實比例的水分子照片喔！無論固態、液態或氣態，它們全都是同一種物質——<strong>水（物理變化）</strong>。
+          </p>
+          <div class="microscope-grid">
+            <div class="micro-col" id="micro-col-solid">
+              <div class="micro-header solid">🧊 固態（冰塊）</div>
+              <canvas id="canvas-particle-solid" width="200" height="140"></canvas>
+              <ul class="micro-list">
+                <li><strong>形狀</strong>：有固定形狀</li>
+                <li><strong>流動性</strong>：不會自由流動</li>
+                <li><strong>粒子示意</strong>：排列較整齊，在原位輕微振動</li>
+              </ul>
+            </div>
+            <div class="micro-col" id="micro-col-liquid">
+              <div class="micro-header liquid">💧 液態（水滴）</div>
+              <canvas id="canvas-particle-liquid" width="200" height="140"></canvas>
+              <ul class="micro-list">
+                <li><strong>形狀</strong>：隨容器改變，沒有固定形狀</li>
+                <li><strong>流動性</strong>：可以自由流動、穿過窄縫</li>
+                <li><strong>粒子示意</strong>：彼此靠近但能互相滑動換位</li>
+              </ul>
+            </div>
+            <div class="micro-col" id="micro-col-gas">
+              <div class="micro-header gas">☁️ 氣態（水蒸氣示意）</div>
+              <canvas id="canvas-particle-gas" width="200" height="140"></canvas>
+              <ul class="micro-list">
+                <li><strong>視覺真相</strong>：<strong>真正的水蒸氣肉眼看不見！</strong>白霧其實是細小水滴</li>
+                <li><strong>擴散性</strong>：沒有固定形狀，會充滿空間隨氣流上升</li>
+                <li><strong>粒子示意</strong>：距離很遠、快速四處飛散</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 暫停與選關 Modal -->
+      <div id="pause-modal" class="modal-overlay">
+        <div class="modal-card">
+          <h2>⏸️ 遊戲暫停</h2>
+          <p>別擔心，隨時可以重新嘗試，失敗不會扣分喔！</p>
+          <div class="modal-actions">
+            <button id="btn-resume" class="primary-btn">▶️ 繼續冒險</button>
+            <button id="btn-restart" class="secondary-btn">🔄 重新開始本關</button>
+            <button id="btn-to-title" class="secondary-btn">🏠 回到主選單 / 切換關卡</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 過關結算 Modal -->
+      <div id="victory-modal" class="modal-overlay">
+        <div class="modal-card victory-card">
+          <div class="victory-badge">🎉 闖關成功！</div>
+          <h2 id="victory-title">完成第一關：冰雪王國</h2>
+          <div class="victory-stars" id="victory-stars">⭐⭐⭐</div>
+          <div class="victory-science-box">
+            <h3>💡 本關學到的自然科學重點：</h3>
+            <ul id="victory-learn-list">
+              <li>水冷卻到適當條件（約 0°C）會<strong>凝固</strong>成有固定形狀的固態冰塊。</li>
+              <li>冰塊吸收熱量後會<strong>融化</strong>回可以流動、沒有固定形狀的液態水。</li>
+              <li>三態轉變屬於<strong>物理變化</strong>，不管變成冰或水，主角依然是水！</li>
+            </ul>
+          </div>
+          <div class="modal-actions">
+            <button id="btn-next-level" class="primary-btn">🚀 前往下一關</button>
+            <button id="btn-replay-level" class="secondary-btn">🔄 再玩一次本關</button>
+            <button id="btn-victory-home" class="secondary-btn">🏠 關卡選單</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
